@@ -1,0 +1,168 @@
+## **Step 1: Start Hive**
+1. Open **Cloudera QuickStart VM** or connect to your **Cloudera cluster**.  
+2. Open a **terminal** and start Hive:  
+   ```bash
+   hive
+   ```
+   This will launch the Hive CLI (Command Line Interface).  
+
+---
+
+## **Step 2: Create a Database**  
+Let's create a new database to work in.  
+
+```sql
+CREATE DATABASE company;
+SHOW DATABASES;
+USE company;
+```
+- `SHOW DATABASES;` lists all available databases.  
+- `USE company;` switches to the newly created database.  
+
+---
+
+## **Step 3: Create a Table**
+Now, let's create a table to store employee data.  
+
+```sql
+CREATE TABLE employees (
+    id INT,
+    name STRING,
+    age INT,
+    department STRING
+) ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' 
+STORED AS TEXTFILE;
+```
+- `ROW FORMAT DELIMITED` specifies that the fields are separated by a delimiter (`,`).  
+- `STORED AS TEXTFILE` means data will be stored in plain text format.  
+
+---
+
+## **Step 4: Load Data into the Table**
+First, create a sample data file `employees.txt`:  
+
+```bash
+nano employees.txt
+```
+Add the following data and save the file:  
+```
+1,John,28,Engineering
+2,Alice,30,HR
+3,Bob,25,Marketing
+```
+Upload the file to HDFS:  
+```bash
+hdfs dfs -mkdir -p /user/hive/warehouse
+hdfs dfs -put employees.txt /user/hive/warehouse/
+```
+Load data into Hive:  
+```sql
+LOAD DATA INPATH '/user/hive/warehouse/employees.txt' INTO TABLE employees;
+```
+
+---
+
+## **Step 5: Query Data**  
+Now, let's run some queries on the `employees` table.  
+
+### **View All Records**
+```sql
+SELECT * FROM employees;
+```
+### **Filter Employees by Age**
+```sql
+SELECT name, department FROM employees WHERE age > 25;
+```
+### **Count Employees by Department**
+```sql
+SELECT department, COUNT(*) FROM employees GROUP BY department;
+```
+
+---
+
+## **Step 6: Create a Partitioned Table**  
+Partitioning helps in faster query performance. Let's create a **sales** table partitioned by year.  
+
+```sql
+CREATE TABLE sales (
+    id INT,
+    amount FLOAT
+) PARTITIONED BY (year INT)
+STORED AS TEXTFILE;
+```
+### **Insert Data into Partitioned Table**  
+```sql
+INSERT INTO sales PARTITION (year=2023) VALUES (1, 200.50);
+```
+### **Retrieve Data from Partitioned Table**
+```sql
+SELECT * FROM sales WHERE year = 2023;
+```
+
+---
+
+## **Step 7: Use Aggregate Functions**  
+### **Find Maximum Age**
+```sql
+SELECT MAX(age) FROM employees;
+```
+### **Find Average Age**
+```sql
+SELECT AVG(age) FROM employees;
+```
+### **Find Total Employees**
+```sql
+SELECT COUNT(*) FROM employees;
+```
+
+---
+
+## **Step 8: Create a Table with Different Storage Formats**  
+By default, Hive stores tables in `TEXTFILE`. Let's create a **Parquet** table for better performance.  
+
+```sql
+CREATE TABLE employees_parquet (
+    id INT,
+    name STRING,
+    age INT,
+    department STRING
+) STORED AS PARQUET;
+```
+Move data from the `employees` table to the new table:  
+```sql
+INSERT INTO TABLE employees_parquet SELECT * FROM employees;
+```
+
+---
+
+## **Step 9: Create a Bucketed Table**  
+Bucketing improves query performance by organizing data into a fixed number of buckets.  
+
+```sql
+CREATE TABLE bucketed_employees (
+    id INT,
+    name STRING,
+    age INT,
+    department STRING
+) CLUSTERED BY (id) INTO 4 BUCKETS
+STORED AS TEXTFILE;
+```
+Enable bucketing before inserting data:  
+```sql
+SET hive.enforce.bucketing = true;
+```
+Insert data:  
+```sql
+INSERT INTO TABLE bucketed_employees SELECT * FROM employees;
+```
+
+---
+
+## **Step 10: Exit Hive**
+To exit the Hive shell, type:  
+```sql
+exit;
+```
+
+---
