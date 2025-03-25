@@ -1,0 +1,31 @@
+mysql -u root -p
+
+create database sswdemo;
+use demo;
+
+CREATE TABLE Employee (Id int Not NULL,  Name VARCHAR(20),DOB  DATE,Gender char(1), Salary int, PRIMARY KEY (Id));
+
+insert into Employee values (1, 'Alex', '1987-12-12','M', 10000);
+insert into Employee values (2, 'Julia', '1987-11-11', 'F', 20000);
+insert into Employee values (3, 'John', '1987-10-10', 'M', 25000);
+insert into Employee values (4, 'Khalishi', '1987-9-9', 'F', 30000);
+
+sqoop import --connect jdbc:mysql://localhost/demo --username root --password cloudera --table Employee
+
+hadoop dfs -cat Employee/*
+
+insert into Employee values (5, 'JonSnow', '1987-8-9', 'M', 35000);
+insert into Employee values (6, 'Arya', '1993-7-7', 'F', 40000);
+
+sqoop import --connect jdbc:mysql://localhost/demo --username root --password cloudera --table Employee --incremental append --check-column id --last-value 4
+
+hadoop dfs -cat Employee/*
+
+***Exporting HDFS Data to MySql Table***
+
+CREATE TABLE EmployeeNew (Id int Not NULL,  Name VARCHAR(20),DOB  DATE, _
+Gender char(1), Salary int, PRIMARY KEY (Id));
+
+sqoop export --connect jdbc:mysql://localhost/demo --username root --password cloudera --export-dir /user/cloudera/Employee --update-mode allowinsert --table EmployeeNew
+
+Select * from EmployeeNew;
